@@ -231,3 +231,197 @@ git status
   git merge --no-ff Feature-A
   ```
   随后编辑器将会启动，用于录入合并信息。
+* git log --graph --- 以图标的形式查看分支
+  ```bash
+  *   commit ec7c2357dbd8ca2e0a1fd39e06e0d5b2379e323f (HEAD -> master)
+  |\  Merge: f14f30f 811efed
+  | | Author: gregrgr6 <gregrgr6@gmail.com>
+  | | Date:   Sat Feb 22 20:33:19 2020 +0800
+  | |
+  | |     Merge branch 'Feature-A'
+  | |     add text
+  | |
+  | * commit 811efed5460e2595ca6a54937a1b6a782b6b896b (Feature-A)
+  |/  Author: gregrgr6 <gregrgr6@gmail.com>
+  |   Date:   Sat Feb 22 20:32:31 2020 +0800
+  |
+  |       Add Text
+  |
+  * commit f14f30f9bd749c5a42ab0114695296379e77d5d5
+    Author: gregrgr6 <gregrgr6@gmail.com>
+    Date:   Sat Feb 22 19:10:51 2020 +0800
+
+        first commit
+  ```
+### 3.3 更改提交的操作
+* git reset --- 回撤到历史版本
+git的另一个特征就是可以灵活操作历史版本。借助分散仓库对的优势，可以不影响其它仓库的前提下对历史版本进行操作。
+这里我们先会带历史版本创建Feature-B分支。
+![](image/3-3.png)
+  * 回到Feature-A分支之前
+  让仓库的HEAD、暂存区、当前工作树回到指定状态，需要用到```git rest --hard```。只要提供目标时间点的哈希值。
+    ```bash
+    git reset --hard f14f30f9bd749c5a42ab0114695296379e77d5d5
+      HEAD 现在位于 f14f30f first commit
+    ```
+  * 创建Feature-B分支
+    ```bash 
+    git checkout -b Feature-B
+    ```
+    然后在README.md文件中添加
+    ```
+    # Git 教程
+    - Feature-B
+    ```
+    然后提交文件
+    ```bash
+    git add README.md
+    git commit -m "Feature-B"
+    [Feature-B 97ee5af] Feature-B
+    1 file changed, 2 insertions(+)
+    ```
+    现在的状态如下图所示
+    ![](image/3-4.png)
+    我们接下来要修改成如下图所示
+    ![](image/3-5.png)
+  * 推进至Feature-A分支合并后的状态
+  执行```git reflog```
+    ```bash
+    97ee5af (HEAD -> Feature-B) HEAD@{0}: commit: Feature-B
+    f14f30f (master) HEAD@{1}: checkout: moving from master to Feature-B
+    f14f30f (master) HEAD@{2}: reset: moving to f14f30f9bd749c5a42ab0114695296379e77d5d5
+    811efed (Feature-A) HEAD@{3}: reset: moving to 811efed5460e2595ca6a54937a1b6a782b6b896b
+    ec7c235 HEAD@{4}: merge Feature-A: Merge made by the 'recursive' strategy.
+    f14f30f (master) HEAD@{5}: checkout: moving from Feature-A to master
+    811efed (Feature-A) HEAD@{6}: checkout: moving from Feature-A to Feature-A
+    811efed (Feature-A) HEAD@{7}: commit: Add Text
+    f14f30f (master) HEAD@{8}: checkout: moving from master to Feature-A
+    f14f30f (master) HEAD@{9}: checkout: moving from Feature-A to master
+    f14f30f (master) HEAD@{10}: checkout: moving from master to Feature-A
+    f14f30f (master) HEAD@{11}: commit (initial): first commit
+    ```
+  可以看到每条命令的执行记录
+  我们将HEAD、暂存区、工作树恢复到合并时间点时候
+  ```bash
+  git checkout master
+    切换到分支 'master'
+  git reset --hard ec7c235
+    HEAD 现在位于 ec7c235 Merge branch 'Feature-A' add text
+  ```
+  * 消除冲突
+  现在只要合并Feature-B分支，就可以得到我们想要的状态。
+    ```bash
+    git merge --no-ff Feature-B
+    自动合并 README.md
+    冲突（内容）：合并冲突于 README.md
+    自动合并失败，修正冲突然后提交修正的结果。
+    ```
+  * 查看冲突部分并将其解决
+  修改合并文件内容成自己想要的结果即可。
+  * 提交解决后的结果
+  ```bash
+  git add README.md
+  git commit -m "Fix conflict"
+  ```
+* git commit --amend --- 修改提交的信息
+  执行```git commit --amend```编辑器就会启动
+  我们将修改的内容修改为“Merge branch "Funture-B"”
+  再用```git log --graph```就可以看到修改的历史
+    ```bash
+    *   commit bdfb09b1d35fa71fd691112f616a1419f04dd75e (HEAD -> master)
+    |\  Merge: ec7c235 97ee5af
+    | | Author: gregrgr6 <gregrgr6@gmail.com>
+    | | Date:   Sun Feb 23 12:30:30 2020 +0800
+    | |
+    | |     Merge branch "Funture-B"
+    | |
+    | * commit 97ee5afd8aa6bf60067f788e8a630e691feb0b69 (Feature-B)
+    | | Author: gregrgr6 <gregrgr6@gmail.com>
+    | | Date:   Sun Feb 23 10:27:31 2020 +0800
+    | |
+    | |     Feature-B
+    | |
+    * |   commit ec7c2357dbd8ca2e0a1fd39e06e0d5b2379e323f
+    |\ \  Merge: f14f30f 811efed
+    | |/  Author: gregrgr6 <gregrgr6@gmail.com>
+    |/|   Date:   Sat Feb 22 20:33:19 2020 +0800
+    | |
+    | |       Merge branch 'Feature-A'
+    | |       add text
+    | |
+    | * commit 811efed5460e2595ca6a54937a1b6a782b6b896b (Feature-A)
+    |/  Author: gregrgr6 <gregrgr6@gmail.com>
+    |   Date:   Sat Feb 22 20:32:31 2020 +0800
+    ```
+* git rebase -i --- 压缩历史
+在合并分支之前，如果发现已提交的内容中有些拼写错误，可以提交一个修改将这个修改包含到前一个提交之中，压缩成一个历史记录。
+  * 创建一个分支
+  ```bash
+  git checkout -b Feature-C
+  ```
+  然后将文件README.md修改如下
+  ```
+  # Git 教程
+  - Feature-B
+  - Feature-A
+  - Feature-C
+  ```
+  执行一步提交
+  ```bash
+  git commit -am "Add Feature-C"
+  ```
+  * 修正拼写错误
+  将README.md修改成下图所示
+    ```
+    diff --git a/README.md b/README.md
+    index 4808ab1..b3d13af 100644
+    --- a/README.md
+    +++ b/README.md
+    @@ -1,4 +1,4 @@
+    # Git 教程
+    - Feature-B
+    - Feature-A
+    -- Feature-C
+    +- Faeture-C
+    ```
+  然后进行提交
+  ```
+  git commit -am "Fix typo"
+    [Feature-C 3d6912f] Fix typo
+    1 file changed, 1 insertion(+), 1 deletion(-)
+  ```
+  * 更改历史
+  ```bash
+  git rebase -i HEAD~2
+  ```
+  执行上述命令之后，可以选定当前分支中包含的两个最新历史为对象，并在编辑器当中打开
+  ```base 
+  pick 35ea826 Add Feature-C
+  pick 3d6912f Fix typo
+
+  # 变基 bdfb09b..3d6912f 到 bdfb09b（2 个提交）
+  #
+  # 命令:
+  # p, pick <提交> = 使用提交
+  # r, reword <提交> = 使用提交，但修改提交说明
+  # e, edit <提交> = 使用提交，进入 shell 以便进行提交修补
+  # s, squash <提交> = 使用提交，但融合到前一个提交
+  # f, fixup <提交> = 类似于 "squash"，但丢弃提交说明日志
+  # x, exec <命令> = 使用 shell 运行命令（此行剩余部分）
+  # b, break = 在此处停止（使用 'git rebase --continue' 继续变基）
+  # d, drop <提交> = 删除提交
+  # l, label <label> = 为当前 HEAD 打上标记
+  # t, reset <label> = 重置 HEAD 到该标记
+  # m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+  # .       创建一个合并提交，并使用原始的合并提交说明（如果没有指定
+  # .       原始提交，使用注释部分的 oneline 作为提交说明）。使用
+  # .       -c <提交> 可以编辑提交说明。
+  #
+  # 可以对这些行重新排序，将从上至下执行。
+  #
+  # 如果您在这里删除一行，对应的提交将会丢失。
+  ```
+  将第二行左侧的pick改为fixup
+  这样之前的历史就被抹去了
+  * 合并至master分支
+  
